@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cereal Data</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <svg id="svg1"></svg>
+  <script type="module">
+    const loadData = async () => {
+      let data = await d3.csv('./data/cereal.csv');
+      return data;
+    }
+
+    loadData().then((data) => {
+      data = data.sort((a, b) => (a.rating < b.rating) ? 1 : -1).slice(0, 5);
+      const colors = ["#FF7F50", "#D2691E", "#F0E68C", "#7B68EE", "#3CB371"]
+
+      const margin = {top: 20, right: 20, bottom: 70, left: 40};
+      const width = 1000 - margin.left - margin.right;
+      const height = 500 - margin.top - margin.bottom;
+  
+      const xScale = d3.scaleBand()
+        .domain(data.map(d => d.name))
+        .range([margin.left, width + margin.left])
+        .padding(0.05);
+  
+      const proteinExtent = d3.extent(data, d => d.protein);
+  
+      const yScale = d3.scaleLinear()
+        .domain([0, d3.max(data.map((d) => d.protein))])
+        .range([height, margin.top]);
+      
+      const svg = d3.select('#svg1')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom);
+  
+      const barGroup = svg.append('g')
+        .selectAll('rect')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('x', (d, i) => xScale(d.name))
+        .attr('y', d => yScale(d.protein))
+        .attr('width', xScale.bandwidth())
+        .attr('height', d => height - yScale(d.protein))
+        .attr('fill', (d, i) => colors[i]);
+  
+      const bottomAxis = d3.axisBottom(xScale);
+      svg
+        .append('g')
+        .attr('fill', '#000000')
+        .attr('transform', `translate(${0}, ${height})`)
+        .call(bottomAxis);
+  
+      const leftAxis = d3.axisLeft(yScale);
+      svg
+        .append('g')
+        .attr('fill', '#000000')
+        .attr('transform', `translate(${margin.left}, 0)`)
+        .call(leftAxis);
+    });
+  </script>
+
+</body>
+</html>
